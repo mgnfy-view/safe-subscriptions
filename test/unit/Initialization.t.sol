@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import { Safe } from "@safe/Safe.sol";
-
 import { GlobalHelper } from "../utils/GlobalHelper.sol";
 
 contract InitializationTest is GlobalHelper {

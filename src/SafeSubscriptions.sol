@@ -35,9 +35,8 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
     {
         if (
             _subscription.serviceProvider == address(0) || _subscription.token == address(0)
-                || _subscription.amount == 0 || _subscription.startingTimestamp == 0
-                || _subscription.startingTimestamp < block.timestamp || _subscription.duration == 0
-                || _subscription.rounds == 0 || _subscription.roundsClaimedSoFar > 0
+                || _subscription.amount == 0 || _subscription.startingTimestamp < block.timestamp
+                || _subscription.duration == 0 || _subscription.rounds == 0 || _subscription.roundsClaimedSoFar > 0
         ) revert InvalidSubscription();
 
         (bytes memory encodedSubscriptionDataWithDeadlineAndNonce, bytes32 subscriptionDataWithDeadlineAndNonceHash) =

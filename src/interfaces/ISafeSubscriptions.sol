@@ -23,7 +23,6 @@ interface ISafeSubscriptions {
     error SubscriptionDoesNotExist(bytes32 subscriptionDataHash);
     error SubscriptionHasNotStartedYet(bytes32 subscriptionDataHash);
     error TransactionFailed();
-    error UnauthorizedUpgrade(address caller, address upgradeAuthority);
     error DeadlinePassed(uint256 deadline, uint256 currentTimestamp);
     error InvalidNonce(uint256 givenNonce, uint256 _expectedNonce);
 }
