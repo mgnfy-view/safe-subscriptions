@@ -9,6 +9,9 @@ import { Enum } from "@safe/common/Enum.sol";
 
 import { ISafeSubscriptions } from "./interfaces/ISafeSubscriptions.sol";
 
+/// @title SafeSubscriptions.
+/// @author mgnfy-view.
+/// @notice SafeSubscriptions is a Gnosis Safe module that allows safe multisigs to manage web3 subscriptions.
 contract SafeSubscriptions is EIP712, ISafeSubscriptions {
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 private constant SUBSCRIPTION_TYPEHASH = keccak256(
@@ -17,15 +20,28 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         )
     );
 
+    /// @dev The address of the multisig this module is attached to.
     Safe private s_safe;
+    /// @dev Nonce to be used by signatures. Prevents replay attacks.
     uint256 private s_nonce;
+    /// @dev Maps hash of a subscription to it's data.
     mapping(bytes32 subscriptionDataHash => Subscription subscription) private s_subscriptions;
+    /// @dev Marks whether a subscription has been cancelled or not.
     mapping(bytes32 subscriptionDataHash => bool isCancelled) private s_isCancelled;
 
+    /// @notice Initializes the safe multisig address and the EIP712 name and version parameters.
+    /// @param _safe The address of the multisig this module is attached to.
     constructor(address _safe) EIP712("Safe Subscriptions", "1") {
         s_safe = Safe(payable(_safe));
     }
 
+    /// @notice Allows owners of the multisig to create a new subscription if `threshold` valid signatures
+    /// have been provided.
+    /// @param _subscription The subscription details.
+    /// @param _deadline The expiry time for signatures.
+    /// @param _nonce Prevents replay attacks.
+    /// @param _signatures A set of `threshold` valid signatures from the multisig owners.
+    /// @return The subscription hash/identifier.
     function createSubscription(
         Subscription memory _subscription,
         uint256 _deadline,
@@ -65,6 +81,12 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         return subscriptionDataHash;
     }
 
+    /// @notice Allows owners of the multisig to cancel an existing subscription if `threshold` valid signatures
+    /// have been provided.
+    /// @param _subscriptionDataHash The subscription hash/identifier.
+    /// @param _deadline The expiry time for signatures.
+    /// @param _nonce Prevents replay attacks.
+    /// @param _signatures A set of `threshold` valid signatures from the multisig owners.
     function cancelSubscription(
         bytes32 _subscriptionDataHash,
         uint256 _deadline,
@@ -95,6 +117,10 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         emit SubscriptionCancelled(_subscriptionDataHash);
     }
 
+    /// @notice Anyone can call this function to claim the subscription amount from the multisig on
+    /// behalf of the service provider.
+    /// @dev If past subscription amounts have not been collected, it can be collected any time in the future.
+    /// @param _subscriptionDataHash The subscription hash/identifier.
     function withdrawFromSubscription(bytes32 _subscriptionDataHash) external {
         Subscription memory subscription = s_subscriptions[_subscriptionDataHash];
 
@@ -133,14 +159,21 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         emit FundsWithdrawnFromSubscription(_subscriptionDataHash, amountToWithdraw);
     }
 
+    /// @notice Reverts if the deadline has passed.
+    /// @param _deadline The expiry timestamp.
     function _checkDeadline(uint256 _deadline) internal view {
         if (_deadline < block.timestamp) revert DeadlinePassed(_deadline, block.timestamp);
     }
 
+    /// @notice Reverts if an incorrect nonce is used.
+    /// @param _nonce The nonce value.
     function _checkNonce(uint256 _nonce) internal view {
         if (_nonce != s_nonce + 1) revert InvalidNonce(_nonce, s_nonce + 1);
     }
 
+    /// @notice Gets the encoded subscription data which can be hashed to create an identifier for the subscription.
+    /// @param _subscription The subscription details.
+    /// @return Abi encoded subscription data.
     function _getEncodedSubscriptionData(Subscription memory _subscription) internal pure returns (bytes memory) {
         return abi.encodePacked(
             SUBSCRIPTION_TYPEHASH,
@@ -156,6 +189,11 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         );
     }
 
+    /// @notice Gets the encoded subscription details with deadline and nonce parameters factored in.
+    /// @param _subscription The subscription details.
+    /// @param _deadline The expiry time for signatures.
+    /// @param _nonce Prevents replay attacks.
+    /// @return The abi encoded subscription data with deadline and nonce values.
     function _getEncodedSubscriptionDataWithDeadlineAndNonce(
         Subscription memory _subscription,
         uint256 _deadline,
@@ -170,22 +208,36 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         return abi.encodePacked(encodedSubscriptionData, _deadline, _nonce);
     }
 
+    /// @notice Gets the address of the safe proxy this module is attached to.
+    /// @return The address of the safe proxy this module is attached to.
     function getSafe() external view returns (address) {
         return address(s_safe);
     }
 
+    /// @notice Gets the next valid nonce to be used for creating or cancelling subscriptions.
+    /// @return The next valid nonce.
     function getNextNonce() external view returns (uint256) {
         return s_nonce + 1;
     }
 
+    /// @notice Gets the subscription details for the given subscription hash/identifier.
+    /// @return The subscription details.
     function getSubscriptionData(bytes32 _subscriptionDataHash) external view returns (Subscription memory) {
         return s_subscriptions[_subscriptionDataHash];
     }
 
+    /// @notice Checks if the subscription for the given subscription hash/identifier has been cancelled or not.
+    /// @return A boolean indicating if the subscription has been cancelled or not.
     function isSubscriptionCancelled(bytes32 _subscriptionDataHash) external view returns (bool) {
         return s_isCancelled[_subscriptionDataHash];
     }
 
+    /// @notice Gets both the abi encoded subscription data as well as its hash.
+    /// @param _subscription The subscription details.
+    /// @param _deadline The expiry time for signatures.
+    /// @param _nonce Prevents replay attacks.
+    /// @return Abi encoded subscription data with deadline and nonce values.
+    /// @return Hash of the abi encoded subscription data with deadline and nonce values.
     function getEncodedSubscriptionDataAndHash(
         Subscription memory _subscription,
         uint256 _deadline,
@@ -204,6 +256,8 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         );
     }
 
+    /// @notice Gets the hash/identifier for the given subscription details.
+    /// @return The subscription hash/identifier.
     function getSubscriptionDataHash(Subscription memory _subscription) public pure returns (bytes32) {
         return keccak256(_getEncodedSubscriptionData(_subscription));
     }
