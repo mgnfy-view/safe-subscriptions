@@ -21,8 +21,10 @@ interface ISafeSubscriptions {
     error InvalidSubscription();
     error SubscriptionAlreadyExists(bytes32 subscriptionDataHash);
     error SubscriptionDoesNotExist(bytes32 subscriptionDataHash);
+    error SubscriptionRevoked();
     error SubscriptionHasNotStartedYet(bytes32 subscriptionDataHash);
+    error ZeroAmountToWithdraw();
     error TransactionFailed();
     error DeadlinePassed(uint256 deadline, uint256 currentTimestamp);
-    error InvalidNonce(uint256 givenNonce, uint256 _expectedNonce);
+    error InvalidNonce(uint256 givenNonce, uint256 expectedNonce);
 }

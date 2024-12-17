@@ -20,6 +20,7 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
     Safe private s_safe;
     uint256 private s_nonce;
     mapping(bytes32 subscriptionDataHash => Subscription subscription) private s_subscriptions;
+    mapping(bytes32 subscriptionDataHash => bool isCancelled) private s_isCancelled;
 
     constructor(address _safe) EIP712("Safe Subscriptions", "1") {
         s_safe = Safe(payable(_safe));
@@ -32,6 +33,7 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         bytes memory _signatures
     )
         external
+        returns (bytes32)
     {
         if (
             _subscription.serviceProvider == address(0) || _subscription.token == address(0)
@@ -59,6 +61,8 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         s_nonce++;
 
         emit SubscriptionCreated(_subscription);
+
+        return subscriptionDataHash;
     }
 
     function cancelSubscription(
@@ -85,7 +89,7 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         _checkDeadline(_deadline);
         _checkNonce(_nonce);
 
-        delete s_subscriptions[_subscriptionDataHash];
+        s_isCancelled[_subscriptionDataHash] = true;
         s_nonce++;
 
         emit SubscriptionCancelled(_subscriptionDataHash);
@@ -94,20 +98,23 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
     function withdrawFromSubscription(bytes32 _subscriptionDataHash) external {
         Subscription memory subscription = s_subscriptions[_subscriptionDataHash];
 
+        if (subscription.serviceProvider == address(0)) revert SubscriptionDoesNotExist(_subscriptionDataHash);
+        if (s_isCancelled[_subscriptionDataHash]) revert SubscriptionRevoked();
         if (subscription.startingTimestamp > block.timestamp) {
             revert SubscriptionHasNotStartedYet(_subscriptionDataHash);
         }
 
         uint256 roundsToClaim;
         if (subscription.isRecurring) {
-            roundsToClaim = (block.timestamp - subscription.startingTimestamp / subscription.duration)
+            roundsToClaim = ((block.timestamp - subscription.startingTimestamp) / subscription.duration)
                 - subscription.roundsClaimedSoFar;
         } else {
-            roundsToClaim = (block.timestamp - subscription.startingTimestamp / subscription.duration);
+            roundsToClaim = (block.timestamp - subscription.startingTimestamp) / subscription.duration;
             if (roundsToClaim > subscription.rounds) roundsToClaim = subscription.rounds;
             roundsToClaim -= subscription.roundsClaimedSoFar;
         }
         uint256 amountToWithdraw = roundsToClaim * subscription.amount;
+        if (amountToWithdraw == 0) revert ZeroAmountToWithdraw();
         s_subscriptions[_subscriptionDataHash].roundsClaimedSoFar += roundsToClaim;
 
         bool success;
@@ -171,8 +178,12 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
         return s_nonce + 1;
     }
 
-    function getSbscriptionData(bytes32 _subscriptionDataHash) external view returns (Subscription memory) {
+    function getSubscriptionData(bytes32 _subscriptionDataHash) external view returns (Subscription memory) {
         return s_subscriptions[_subscriptionDataHash];
+    }
+
+    function isSubscriptionCancelled(bytes32 _subscriptionDataHash) external view returns (bool) {
+        return s_isCancelled[_subscriptionDataHash];
     }
 
     function getEncodedSubscriptionDataAndHash(

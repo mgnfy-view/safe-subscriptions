@@ -11,6 +11,7 @@ import { SafeProxyFactory } from "@safe/proxies/SafeProxyFactory.sol";
 import { ISafeSubscriptions } from "../../src/interfaces/ISafeSubscriptions.sol";
 
 import { SafeSubscriptions } from "../../src/SafeSubscriptions.sol";
+import { ERC20Mintable } from "./ERC20Mintable.sol";
 
 contract GlobalHelper is Test {
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -24,6 +25,8 @@ contract GlobalHelper is Test {
     address public singleton;
     SafeProxyFactory public safeProxyFactory;
     Safe public safe;
+
+    ERC20Mintable public token;
 
     address public serviceProvider;
     uint256 public amount;
@@ -57,6 +60,10 @@ contract GlobalHelper is Test {
 
         safeSubscriptions = new SafeSubscriptions(address(safe));
 
+        string memory tokenName = "Optimism";
+        string memory tokenSymbol = "OP";
+        token = new ERC20Mintable(tokenName, tokenSymbol);
+
         bytes memory enableModuleCallData =
             abi.encodeWithSelector(safe.enableModule.selector, address(safeSubscriptions));
         uint256 gasToUse = 10_000;
@@ -86,6 +93,14 @@ contract GlobalHelper is Test {
         delay = 2 minutes;
     }
 
+    function _createTestSubscription() internal returns (bytes32) {
+        (ISafeSubscriptions.Subscription memory subscription, uint256 deadline, uint256 nonce) =
+            _getTestCreateSubscriptionData();
+        bytes memory signatures = _getSignaturesForSubscriptionOperation(subscription, deadline, nonce);
+
+        return safeSubscriptions.createSubscription(subscription, deadline, nonce, signatures);
+    }
+
     function _getTestCreateSubscriptionData()
         internal
         view
@@ -108,12 +123,13 @@ contract GlobalHelper is Test {
         return (subscription, deadline, nonce);
     }
 
-    function _getSignaturesForSubscriptionCreation(
+    function _getSignaturesForSubscriptionOperation(
         ISafeSubscriptions.Subscription memory _subscription,
         uint256 _deadline,
         uint256 _nonce
     )
         internal
+        view
         returns (bytes memory)
     {
         (, bytes32 subscriptionDataHash) =

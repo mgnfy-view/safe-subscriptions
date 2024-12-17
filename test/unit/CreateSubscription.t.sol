@@ -82,7 +82,7 @@ contract CreateSubscriptionTest is GlobalHelper {
         (ISafeSubscriptions.Subscription memory subscription, uint256 deadline, uint256 nonce) =
             _getTestCreateSubscriptionData();
         subscription.startingTimestamp = block.timestamp + 2 * delay;
-        bytes memory signatures = _getSignaturesForSubscriptionCreation(subscription, deadline, nonce);
+        bytes memory signatures = _getSignaturesForSubscriptionOperation(subscription, deadline, nonce);
 
         _warpBy(delay + 1);
 
@@ -94,7 +94,7 @@ contract CreateSubscriptionTest is GlobalHelper {
         (ISafeSubscriptions.Subscription memory subscription, uint256 deadline, uint256 nonce) =
             _getTestCreateSubscriptionData();
         nonce = 10;
-        bytes memory signatures = _getSignaturesForSubscriptionCreation(subscription, deadline, nonce);
+        bytes memory signatures = _getSignaturesForSubscriptionOperation(subscription, deadline, nonce);
 
         vm.expectRevert(
             abi.encodeWithSelector(ISafeSubscriptions.InvalidNonce.selector, nonce, safeSubscriptions.getNextNonce())
@@ -105,12 +105,12 @@ contract CreateSubscriptionTest is GlobalHelper {
     function test_creatingANewSubscriptionSucceeds() public {
         (ISafeSubscriptions.Subscription memory subscription, uint256 deadline, uint256 nonce) =
             _getTestCreateSubscriptionData();
-        bytes memory signatures = _getSignaturesForSubscriptionCreation(subscription, deadline, nonce);
+        bytes memory signatures = _getSignaturesForSubscriptionOperation(subscription, deadline, nonce);
 
-        safeSubscriptions.createSubscription(subscription, deadline, nonce, signatures);
+        bytes32 subscriptionDataHash = safeSubscriptions.createSubscription(subscription, deadline, nonce, signatures);
 
         ISafeSubscriptions.Subscription memory subscriptionData =
-            safeSubscriptions.getSbscriptionData(safeSubscriptions.getSubscriptionDataHash(subscription));
+            safeSubscriptions.getSubscriptionData(subscriptionDataHash);
         assertEq(subscriptionData.serviceProvider, subscription.serviceProvider);
         assertEq(subscriptionData.token, subscription.token);
         assertEq(subscriptionData.amount, subscription.amount);
@@ -127,7 +127,7 @@ contract CreateSubscriptionTest is GlobalHelper {
     function test_creatingANewSubscriptionEmitsEvent() public {
         (ISafeSubscriptions.Subscription memory subscription, uint256 deadline, uint256 nonce) =
             _getTestCreateSubscriptionData();
-        bytes memory signatures = _getSignaturesForSubscriptionCreation(subscription, deadline, nonce);
+        bytes memory signatures = _getSignaturesForSubscriptionOperation(subscription, deadline, nonce);
 
         vm.expectEmit(true, true, true, true);
         emit ISafeSubscriptions.SubscriptionCreated(subscription);
