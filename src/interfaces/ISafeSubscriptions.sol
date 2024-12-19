@@ -39,4 +39,34 @@ interface ISafeSubscriptions {
     error TransactionFailed();
     error DeadlinePassed(uint256 deadline, uint256 currentTimestamp);
     error InvalidNonce(uint256 givenNonce, uint256 expectedNonce);
+
+    function createSubscription(
+        Subscription memory _subscription,
+        uint256 _deadline,
+        uint256 _nonce,
+        bytes memory _signatures
+    )
+        external
+        returns (bytes32);
+    function cancelSubscription(
+        bytes32 _subscriptionDataHash,
+        uint256 _deadline,
+        uint256 _nonce,
+        bytes memory _signatures
+    )
+        external;
+    function withdrawFromSubscription(bytes32 _subscriptionDataHash) external;
+    function getSafe() external view returns (address);
+    function getNextNonce() external view returns (uint256);
+    function getSubscriptionData(bytes32 _subscriptionDataHash) external view returns (Subscription memory);
+    function isSubscriptionCancelled(bytes32 _subscriptionDataHash) external view returns (bool);
+    function getEncodedSubscriptionDataAndHash(
+        Subscription memory _subscription,
+        uint256 _deadline,
+        uint256 _nonce
+    )
+        external
+        view
+        returns (bytes memory, bytes32);
+    function getSubscriptionDataHash(Subscription memory _subscription) external pure returns (bytes32);
 }
