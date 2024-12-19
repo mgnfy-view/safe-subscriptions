@@ -1,5 +1,5 @@
 # ISafeSubscriptions
-[Git Source](https://github.com/mgnfy-view/safe-subscriptions/blob/7655498651b4e9751995b9d5f9d47397b3b97bd0/src/interfaces/ISafeSubscriptions.sol)
+[Git Source](https://github.com/mgnfy-view/safe-subscriptions/blob/afae2266cf372f06ed0f14e9e93730ce80fbbe96/src/interfaces/ISafeSubscriptions.sol)
 
 
 ## Functions
