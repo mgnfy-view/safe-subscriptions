@@ -1,5 +1,5 @@
 # SafeSubscriptions
-[Git Source](https://github.com/mgnfy-view/safe-subscriptions/blob/ee23a85b61e1a2fcb6f4711abea433f68c6a08e4/src/SafeSubscriptions.sol)
+[Git Source](https://github.com/mgnfy-view/safe-subscriptions/blob/7655498651b4e9751995b9d5f9d47397b3b97bd0/src/SafeSubscriptions.sol)
 
 **Inherits:**
 EIP712, [ISafeSubscriptions](/src/interfaces/ISafeSubscriptions.sol/interface.ISafeSubscriptions.md)

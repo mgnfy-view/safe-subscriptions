@@ -1,6 +1,90 @@
 # ISafeSubscriptions
-[Git Source](https://github.com/mgnfy-view/safe-subscriptions/blob/ee23a85b61e1a2fcb6f4711abea433f68c6a08e4/src/interfaces/ISafeSubscriptions.sol)
+[Git Source](https://github.com/mgnfy-view/safe-subscriptions/blob/7655498651b4e9751995b9d5f9d47397b3b97bd0/src/interfaces/ISafeSubscriptions.sol)
 
+
+## Functions
+### createSubscription
+
+
+```solidity
+function createSubscription(
+    Subscription memory _subscription,
+    uint256 _deadline,
+    uint256 _nonce,
+    bytes memory _signatures
+)
+    external
+    returns (bytes32);
+```
+
+### cancelSubscription
+
+
+```solidity
+function cancelSubscription(
+    bytes32 _subscriptionDataHash,
+    uint256 _deadline,
+    uint256 _nonce,
+    bytes memory _signatures
+)
+    external;
+```
+
+### withdrawFromSubscription
+
+
+```solidity
+function withdrawFromSubscription(bytes32 _subscriptionDataHash) external;
+```
+
+### getSafe
+
+
+```solidity
+function getSafe() external view returns (address);
+```
+
+### getNextNonce
+
+
+```solidity
+function getNextNonce() external view returns (uint256);
+```
+
+### getSubscriptionData
+
+
+```solidity
+function getSubscriptionData(bytes32 _subscriptionDataHash) external view returns (Subscription memory);
+```
+
+### isSubscriptionCancelled
+
+
+```solidity
+function isSubscriptionCancelled(bytes32 _subscriptionDataHash) external view returns (bool);
+```
+
+### getEncodedSubscriptionDataAndHash
+
+
+```solidity
+function getEncodedSubscriptionDataAndHash(
+    Subscription memory _subscription,
+    uint256 _deadline,
+    uint256 _nonce
+)
+    external
+    view
+    returns (bytes memory, bytes32);
+```
+
+### getSubscriptionDataHash
+
+
+```solidity
+function getSubscriptionDataHash(Subscription memory _subscription) external pure returns (bytes32);
+```
 
 ## Events
 ### SubscriptionCreated
