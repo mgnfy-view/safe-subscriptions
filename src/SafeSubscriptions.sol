@@ -16,7 +16,7 @@ contract SafeSubscriptions is EIP712, ISafeSubscriptions {
     address private constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 private constant SUBSCRIPTION_TYPEHASH = keccak256(
         bytes(
-            "Subscription(address serviceProvider,address token,uint256 amount,uint256 startingTimestamp,uint256 duration,uint256 rounds,uint256 isRecurring,uint256 roundsClaimedSoFar,uint256 salt)"
+            "Subscription(address serviceProvider,address token,uint256 amount,uint256 startingTimestamp,uint256 duration,uint256 rounds,uint256 isRecurring,uint256 roundsClaimedSoFar,uint256 salt,uint256 deadline, uint256 nonce)"
         )
     );
 
